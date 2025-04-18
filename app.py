@@ -5,8 +5,16 @@ from werkzeug.utils import secure_filename
 import subprocess
 from pdf2docx import Converter
 from docx2pdf import convert as docx_to_pdf
+from flask import send_from_directory
+
+
 
 app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return send_from_directory('.', 'index.html')  # если файл в корне
+
 
 @app.route("/api/convert", methods=["POST"])
 def convert_file():
