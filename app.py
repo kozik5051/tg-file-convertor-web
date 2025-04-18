@@ -4,7 +4,7 @@ from flask import Flask, request, send_file
 from werkzeug.utils import secure_filename
 import subprocess
 from pdf2docx import Converter
-from docx2pdf import convert as docx_to_pdf
+import subprocess
 from flask import send_from_directory
 
 
@@ -40,7 +40,9 @@ def convert_file():
 
         elif target_format == "word_to_pdf":
             output_path = f"{base}.pdf"
-            docx_to_pdf(input_path, output_path)
+            cmd = ["libreoffice", "--headless", "--convert-to", "pdf", input_path, "--outdir", tempfile.gettempdir()]
+            subprocess.run(cmd, check=True)
+
 
         elif target_format in ["mp3", "wav", "mp4", "avi"]:
             output_path = f"{base}_converted.{target_format}"
