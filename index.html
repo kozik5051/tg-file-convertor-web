@@ -1,85 +1,64 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Конвертер файлов</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      background-color: #f4f4f4;
-      padding: 20px;
-      text-align: center;
-    }
-    h2 {
-      margin-bottom: 20px;
-    }
-    input, select, button {
-      margin: 10px auto;
-      padding: 10px;
-      font-size: 16px;
-      display: block;
-      width: 80%;
-    }
-    #status {
-      margin-top: 15px;
-      font-weight: bold;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Файловый конвертер</title>
 </head>
 <body>
-  <h2>Конвертер файлов</h2>
+  <h1>Конвертер файлов</h1>
+  <form id="convert-form">
+    <input type="file" id="file" name="file" required />
+    <select id="format" name="format">
+      <option value="mp3">MP3</option>
+      <option value="mp4">MP4</option>
+      <option value="wav">WAV</option>
+    </select>
+    <button type="submit">Конвертировать</button>
+  </form>
 
-  <input type="file" id="fileInput" />
-  <select id="formatSelect">
-    <option value="mp3">🎵 MP3</option>
-    <option value="wav">🎧 WAV</option>
-    <option value="mp4">🎥 MP4</option>
-    <option value="avi">📽 AVI</option>
-    <option value="pdf_to_word">📄 PDF → Word</option>
-    <option value="word_to_pdf">📝 Word → PDF</option>
-  </select>
-
-  <button onclick="uploadFile()">Конвертировать</button>
-  <div id="status"></div>
+  <p id="status"></p>
 
   <script>
-    async function uploadFile() {
-      const fileInput = document.getElementById('fileInput');
-      const format = document.getElementById('formatSelect').value;
-      const statusDiv = document.getElementById('status');
+    const form = document.getElementById("convert-form");
+    const status = document.getElementById("status");
 
-      if (!fileInput.files.length) {
-        statusDiv.innerText = 'Пожалуйста, выберите файл.';
-        return;
-      }
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
+      const file = document.getElementById("file").files[0];
+      const format = document.getElementById("format").value;
       const formData = new FormData();
-      formData.append('file', fileInput.files[0]);
-      formData.append('format', format);
+      formData.append("file", file);
+      formData.append("format", format);
 
-      statusDiv.innerText = '⏳ Загружаем и конвертируем...';
+      status.textContent = "Обработка...";
 
       try {
-        const res = await fetch('https://tg-file-convertor-web-production.up.railway.app/api/convert', {
-          method: 'POST',
+        const response = await fetch("/api/convert", {
+          method: "POST",
           body: formData
         });
 
-        if (!res.ok) throw new Error('Ошибка при обработке');
+        if (!response.ok) {
+          const error = await response.json();
+          status.textContent = "Ошибка: " + error.error;
+          return;
+        }
 
-        const blob = await res.blob();
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'converted_file';
-        link.click();
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `converted.${format}`;
+        a.click();
 
-        statusDiv.innerText = '✅ Готово!';
+        status.textContent = "Готово!";
       } catch (err) {
-        statusDiv.innerText = '❌ Ошибка: ' + err.message;
+        status.textContent = "Ошибка при отправке запроса.";
+        console.error(err);
       }
-    }
+    });
   </script>
 </body>
 </html>
