@@ -15,38 +15,70 @@
     h2 {
       margin-bottom: 20px;
     }
-    .format-btn {
+    input, select, button {
+      margin: 10px auto;
+      padding: 10px;
+      font-size: 16px;
       display: block;
       width: 80%;
-      margin: 10px auto;
-      padding: 15px;
-      font-size: 18px;
-      background-color: #2a9df4;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
     }
-    .format-btn:hover {
-      background-color: #1c7ecb;
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h2>Выберите формат для конвертации</h2>
+  <h2>Конвертер файлов</h2>
 
-  <button class="format-btn" onclick="sendData('mp3')">🎵 MP3</button>
-  <button class="format-btn" onclick="sendData('wav')">🎧 WAV</button>
-  <button class="format-btn" onclick="sendData('mp4')">🎥 MP4</button>
-  <button class="format-btn" onclick="sendData('avi')">📽 AVI</button>
-  <button class="format-btn" onclick="sendData('pdf_to_word')">📄 PDF → Word</button>
-  <button class="format-btn" onclick="sendData('word_to_pdf')">📝 Word → PDF</button>
+  <input type="file" id="fileInput" />
+  <select id="formatSelect">
+    <option value="mp3">🎵 MP3</option>
+    <option value="wav">🎧 WAV</option>
+    <option value="mp4">🎥 MP4</option>
+    <option value="avi">📽 AVI</option>
+    <option value="pdf_to_word">📄 PDF → Word</option>
+    <option value="word_to_pdf">📝 Word → PDF</option>
+  </select>
+
+  <button onclick="uploadFile()">Конвертировать</button>
+  <div id="status"></div>
 
   <script>
-    function sendData(format) {
-      Telegram.WebApp.sendData(format);
-      Telegram.WebApp.close();
+    async function uploadFile() {
+      const fileInput = document.getElementById('fileInput');
+      const format = document.getElementById('formatSelect').value;
+      const statusDiv = document.getElementById('status');
+
+      if (!fileInput.files.length) {
+        statusDiv.innerText = 'Пожалуйста, выберите файл.';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      formData.append('format', format);
+
+      statusDiv.innerText = '⏳ Загружаем и конвертируем...';
+
+      try {
+        const res = await fetch('https://tg-file-convertor-web-production.up.railway.app/api/convert', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) throw new Error('Ошибка при обработке');
+
+        const blob = await res.blob();
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'converted_file';
+        link.click();
+
+        statusDiv.innerText = '✅ Готово!';
+      } catch (err) {
+        statusDiv.innerText = '❌ Ошибка: ' + err.message;
+      }
     }
   </script>
 </body>
