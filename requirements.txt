@@ -1,5 +1,3 @@
-flask
-aiogram
-python-dotenv
-pdf2docx
-python-docx
+fastapi
+uvicorn
+python-multipart
